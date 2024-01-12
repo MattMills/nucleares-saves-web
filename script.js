@@ -62,24 +62,36 @@ function invertNodeName(nodeName) {
 
 function processNode(node, path = [], locations = [], callback) {
     if (typeof node === 'string') {
-        
         if (isLikelyXML(node)) {
             parseXMLString(node, (err, result) => {
                 if (!err) {
                     locations.push({ path: path.join(' > '), original: node, result });
-                    //if(result.hasOwnProperty('CSaveClass') && result['CSaveClass'].hasOwnProperty('$') && Object.keys(result['CSaveClass']).length == 1){
-                        //err = 'Ignoring node result due to no non-xmlns children';
-                        //callback(err, null, locations);
-                    //}else{
-                        callback(null, result, locations);
-                    //}
+                    callback(null, result, locations);
                 } else {
                     callback(err, null, locations);
                 }
             });
-        }else if (node.includes('|')){
+        } else if (node.includes('|')) {
             const arrayValues = node.split('|').map(value => value.trim());
-            callback(null, arrayValues, locations);
+            let count = arrayValues.length;
+            arrayValues.forEach((value, index) => {
+                if (isLikelyXML(value)) {
+                    parseXMLString(value, (err, result) => {
+                        if (!err) {
+                            arrayValues[index] = result;
+                        }
+                        --count;
+                        if (count === 0) {
+                            callback(null, arrayValues, locations);
+                        }
+                    });
+                } else {
+                    --count;
+                    if (count === 0) {
+                        callback(null, arrayValues, locations);
+                    }
+                }
+            });
         } else {
             callback(null, node, locations); // No need to parse as XML, just return the node
         }
@@ -93,16 +105,12 @@ function processNode(node, path = [], locations = [], callback) {
                     node[key] = result;
                     locations = updatedLocations;
                 }
-                --count
-                //if(--count === 0){
-                //    callback(null, node, locations);
-                //}
+                --count;
+                if (count === 0) {
+                    callback(null, node, locations);
+                }
             });
         });
-
-        if (count === 0) {
-            callback(null, node, locations);
-        }
     } else {
         callback(null, node, locations);
     }
@@ -284,28 +292,42 @@ function createNavbarFromJson(jsonData) {
         if (jsonData[key].hasOwnProperty('CSaveClass') && jsonData[key]['CSaveClass'].hasOwnProperty('$') && Object.keys(jsonData[key]['CSaveClass']).length  == 1) return;
 
         // Create the list item
-        const listItem = document.createElement('li');
-        listItem.className = 'nav-item';
-        listItem.setAttribute('role', 'presentation');
+        const listItem = $('<li></li>', {
+            class: 'nav-item',
+            role: 'presentation'
+        });
 
         // Create the button
-        const button = document.createElement('button');
-        button.className = 'nav-link';
-        button.id = `${key}-tab`;
-        button.setAttribute('data-bs-toggle', 'tab');
-        button.setAttribute('data-bs-target', `#${key}`);
-        button.setAttribute('type', 'button');
-        button.setAttribute('role', 'tab');
-        button.setAttribute('aria-controls', key);
-        button.setAttribute('aria-selected', index === 0 ? 'true' : 'false'); // First tab as selected
-        button.textContent = translateNodeName(key); // Capitalize the first letter of the tab name
+        const button = $('<button></button>', {
+            class: 'nav-link',
+            id: `${key}-tab`,
+            'data-original-id': key,
+            'data-bs-toggle': 'tab',
+            'data-bs-target': `#${key}`,
+            type: 'button',
+            role: 'tab',
+            'aria-controls': key,
+            'aria-selected': index === 0 ? 'true' : 'false', // First tab as selected
+            text: translateNodeName(key) // Translate the node name
+        });
 
         // Append button to list item, and list item to the navbar
-        listItem.appendChild(button);
-        navbarContainer.appendChild(listItem);
+        $(listItem).append(button);
+        $(navbarContainer).append(listItem);
+        
+        if($('#' + key).length == 0){
+            createNewTab(key);
+        }
 
         if(key === 'componentes' || key === 'objetos'){
             populateDropdownForTab(jsonData, key);
+        }else{
+            button.on('click', (event) => {
+                event.preventDefault();
+                const selectedItem = $(event.target).attr('data-original-id');
+                // Function to handle displaying details for the selected item
+                displayDetailsForSelection(jsonData, selectedItem, null); // Replace tabKey with key
+            });
         }
     });
 }
@@ -328,7 +350,10 @@ function populateDropdownForTab(jsonData, tabKey) {
 
     if (jsonData[tabKey]) {
         $.each(jsonData[tabKey], (index, item) => {
-                dropdown.append($(`<a class="dropdown-item" href="#">${index}</a>`));
+                dropdown.append($(`<a class="dropdown-item" data-bs-toggle="tab" data-bs-target="#${tabKey}-${index}" href="#">${index}</a>`));
+                if($('#' + tabKey + '-' + index).length == 0){
+                    createNewTab(tabKey + '-' + index);
+                }
         });
     }
 
@@ -340,3 +365,78 @@ function populateDropdownForTab(jsonData, tabKey) {
         displayDetailsForSelection(jsonData, tabKey, selectedItem);
     });
 }
+
+function displayDetailsForSelection(jsonData, tabKey, selectedItem) {
+    // Find the selected item in the JSON data
+    var child_node = 'CSaveClass';
+    if(tabKey === 'LOGISTICA' || tabKey === 'INTERFAZ' || tabKey === 'AUDITORIAS' || tabKey === 'TRANSFORMACION'){
+        child_node = 'CSave';
+    }
+    var item = jsonData[tabKey][selectedItem] ? jsonData[tabKey][selectedItem][child_node] : jsonData[tabKey][child_node];
+
+    if(!item){
+        item = jsonData[tabKey][selectedItem];
+        console.log('Couldnt find CSaveClass or CSave, trying to use parent node');
+    }
+
+    if(!item){
+        item = jsonData[tabKey];
+        console.log('displayDetailsForSelection(jsonData,'+tabKey+','+selectedItem+') - item not found, using parent node');
+    }
+
+    // If the item was found
+    if (item) {
+        // Get the tab where the details should be displayed
+        let tab_id;
+        if(selectedItem == null){
+            tab_id = tabKey;
+        }else{
+            tab_id = tabKey+'-'+selectedItem;
+        }
+
+        
+        var tab = $('#' + tab_id);
+        tab.empty();
+        // Create a new list for the item details
+        var list = $('<ul></ul>');
+
+        // Recursive function to handle objects
+        function handleObject(obj, list) {
+            $.each(obj, function(key, value) {
+                if (key === '$') return; // Skip the '$' element
+                if (typeof value === 'object' && value !== null) {
+                    var sublist = $('<ul></ul>');
+                    var listItem = $('<li></li>').text(key + ':');
+                    listItem.append(sublist);
+                    list.append(listItem);
+                    handleObject(value, sublist);
+                } else {
+                    var listItem = $('<li></li>');
+                    listItem.text(key + ': ' + value);
+                    list.append(listItem);
+                }
+            });
+        }
+
+        // Handle the item object
+        handleObject(item, list);
+
+        // Add the list to the tab
+        tab.append(list)
+        console.log('show('+tab_id+')');
+        $('#' + tab_id).tab('show');
+        console.log('show('+tab_id+')');
+        //$('.tab-pane').removeClass('active');
+        //$('#' + tabKey+'-'+selectedItem).addClass('active show');
+    }else{
+        console.log('displayDetailsForSelection(jsonData,'+tabKey+','+selectedItem+') - item not found');
+    }
+}
+
+function createNewTab(name){
+    $('<div class="tab-pane fade" id="'+name+'" role="tabpanel" aria-labelledby="'+name+'-tab"></div>').appendTo('#xmlTabContent');
+}
+
+$(document).ready(function(){
+   
+});
