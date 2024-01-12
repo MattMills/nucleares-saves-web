@@ -1,0 +1,47 @@
+body {
+  padding-top: 100px; 
+}
+
+ #drop-area {
+            border: 2px dashed #CCC;
+            border-radius: 5px;
+            padding: 20px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #drop-area.hover {
+            border-color: #333;
+        }
+
+.xml-tree-view ul {
+    list-style-type: none;
+    padding-left: 20px;
+}
+
+.xml-tree-view li {
+    cursor: pointer;
+    position: relative;
+}
+
+.xml-tree-view li:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -20px;
+    width: 10px;
+    height: 10px;
+    border-left: 2px solid #000;
+    border-bottom: 2px solid #000;
+    border-radius: 0 0 0 0;
+}
+
+.sticky-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000; /* Ensure the navbar stays on top of other elements */
+}
+
+.main-content {
+    padding-top: 100px;
+}

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"  data-bs-theme="dark">
+<head>
+    <title>XML File Parser</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha256-MBffSnbbXwHCuZtgPYiwMQbfE7z+GOZ7fBPCNB06Z98=" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <!-- Tabbed Navbar -->
+    <div class="row">
+    <ul class="nav nav-tabs fixed-top sticky-navbar" id="xmlTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" type="button" role="tab" aria-controls="upload" aria-selected="true">Upload</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="debug-tab" data-bs-toggle="tab" data-bs-target="#debug" type="button" role="tab" aria-controls="debug" aria-selected="false">Debug View</button>
+        </li>
+        <!-- Additional tabs can be added here -->
+    </ul>
+    </div>
+    <!-- Tab Content -->
+    <div class="row">
+    <div class="container main-content">
+    <div class="tab-content" id="xmlTabContent">
+        <div class="tab-pane fade show active" id="upload" role="tabpanel" aria-labelledby="upload-tab">
+            <div id="uploadView">
+                <div id="drop-area">
+                    <form class="my-form">
+                        <p>Upload a file with the button or by dragging and dropping it here</p>
+                        <input type="file" id="fileElem" multiple accept="text/xml">
+                        <label class="button" for="fileElem">Select a file</label>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="debug" role="tabpanel" aria-labelledby="debug-tab">
+            <!-- Debug View Content will be added here -->
+            <div id="xmlTreeView"></div>
+        </div>
+        <!-- Additional tab contents can be added here -->
+    </div>
+    </div>
+    </div>
+    </div>
+     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha256-YMa+wAM6QkVyz999odX7lPRxkoYAan8suedu4k2Zur8=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
+
+
+
